@@ -1,0 +1,58 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd" >
+<mapper namespace="com.managementsystem.mapper.ProdOrderMapper">
+<!--SQL片段拼接-->
+    <sql id="search_where">
+        <where>
+            <if test="condition.wechat_no != null and condition.wechat_no !=''">
+                wechat_no like '%${condition.wechat_no}%'
+            </if>
+            <if test="condition.name != null and condition.name !=''">
+                and name like '%${condition.name}%'
+            </if>
+            <if test="condition.tel != null and condition.tel !=''">
+                and tel like '%${condition.tel}%'
+            </if>
+        </where>
+    </sql>
+
+    <select id="findCountByMap" parameterType="map" resultType="int">
+      select count(*) from t_prod_order
+        <include refid="search_where"></include>
+    </select>
+
+    <select id="findListByMap" parameterType="map" resultType="prodOrder">
+        select * from t_prod_order
+        <include refid="search_where"></include>
+        order by order_date desc limit #{start},#{pageSize};
+    </select>
+
+    <insert id="insert" parameterType="prodOrder">
+       INSERT INTO t_prod_order (uuid,order_id,name,wechat_no,tel,prod_name,prod_price,num,order_date,update_datetime) VALUES
+      (UUID(), UUID(), #{name}, #{wechat_no}, #{tel}, #{prod_name}, #{prod_price}, #{num}, #{order_date}, CURRENT_TIMESTAMP());
+    </insert>
+
+    <select id="findByOrderId" parameterType="string" resultType="prodOrder">
+        select * from t_prod_order where order_id = #{order_id};
+    </select>
+
+    <delete id="deleteByOrderId" parameterType="string">
+        DELETE FROM t_prod_order where order_id = #{order_id};
+    </delete>
+
+    <update id="update" parameterType="prodOrder">
+          UPDATE t_prod_order SET name = #{name}, wechat_no = #{wechat_no}, tel = #{tel}, prod_name = #{prod_name}, prod_price = #{prod_price}, update_datetime = CURRENT_TIMESTAMP(), num = #{num}, order_date = #{order_date}
+       WHERE
+          order_id = #{order_id}
+    </update>
+
+    <select id="getMonthIncomes" resultType="monthIncome">
+        SELECT
+        LEFT(order_date,7) as date,
+        count(*) as total,
+        SUM(convert(prod_price,decimal(18,2))) as income
+        from t_prod_order
+        GROUP BY LEFT(order_date,7);
+    </select>
+</mapper>
+
